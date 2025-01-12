@@ -22,9 +22,6 @@ deploy:
     entrypoint: [""]
   tags:
     - gitlab4
-  before_script:
-    # Копирование чарта из репозитория в рабочую директорию
-    - cp -r /home/neoflex/fixit-release-helm-chart .
   script:
     # Применение манифестов Kubernetes
     - |
