@@ -36,10 +36,3 @@ deploy:
       fi
     # Обновление или установка Helm чарта
     - helm upgrade fixit-release ./fixit-release-helm-chart --install --namespace gitlab-task4
-
-#  script:
-#    - |
-#      eval "cat << EOF
-#      $(cat manifests/*.yaml)
-#      EOF" | kubectl apply -f -
-#    - helm upgrade fixit-release /home/neoflex/fixit-release-helm-chart --install --namespace gitlab-task4
