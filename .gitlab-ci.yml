@@ -1,0 +1,48 @@
+stages:
+  - kaniko-build
+  - deploy on dev
+
+docker-build:
+  stage: kaniko-build
+  variables:
+    GIT_USERNAME: ${CI_REGISTRY_USER}
+    GIT_PASSWORD: ${CI_REGISTRY_PASSWORD}
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  tags:
+    - gitlab4
+  script:
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "${CI_PROJECT_DIR}/Dockerfile" --destination "registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA"
+
+deploy:
+  stage: deploy on dev
+  image:
+    name: alpine/helm:3.2.1
+    entrypoint: [""]
+  tags:
+    - gitlab4
+  before_script:
+    # Копирование чарта из репозитория в рабочую директорию
+    - cp -r /home/neoflex/fixit-release-helm-chart .
+  script:
+    # Применение манифестов Kubernetes
+    - |
+      if [ -f manifests/*.yaml ]; then
+        for file in manifests/*.yaml; do
+          eval "cat << EOF
+          $(cat $file)
+          EOF" | kubectl apply -f -
+        done
+      else
+        echo "No manifest files found in manifests/ directory."
+      fi
+    # Обновление или установка Helm чарта
+    - helm upgrade fixit-release ./fixit-release-helm-chart --install --namespace gitlab-task4
+
+#  script:
+#    - |
+#      eval "cat << EOF
+#      $(cat manifests/*.yaml)
+#      EOF" | kubectl apply -f -
+#    - helm upgrade fixit-release /home/neoflex/fixit-release-helm-chart --install --namespace gitlab-task4
