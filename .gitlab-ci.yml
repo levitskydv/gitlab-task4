@@ -1,0 +1,33 @@
+stages:
+  - kaniko-build
+  - deploy on dev
+
+docker-build:
+  stage: kaniko-build
+  variables:
+    GIT_USERNAME: ${CI_REGISTRY_USER}
+    GIT_PASSWORD: ${CI_REGISTRY_PASSWORD}
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  tags:
+    - microk8s
+  script:
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "${CI_PROJECT_DIR}/Dockerfile" --destination "registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA"
+
+deploy:
+  stage: deploy on dev
+  image:
+    name: alpine/helm:3.2.1
+    entrypoint: [""]
+  tags:
+    - microk8s
+  script:
+    - helm upgrade fixit-release helm-chart-0.1.0 --install --namespace gitlab-task4
+
+
+#  script:
+#    - |
+#      eval "cat << EOF
+#      $(cat manifests/*.yaml)
+#      EOF" | kubectl apply -f -
